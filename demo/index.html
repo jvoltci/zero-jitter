@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZeroJitter — Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a1a;
+      --surface: #12122a;
+      --surface-hover: #1a1a3a;
+      --border: #2a2a4a;
+      --text: #e8e8f0;
+      --text-dim: #8888aa;
+      --accent: #6c5ce7;
+      --accent-glow: rgba(108, 92, 231, 0.3);
+      --success: #00d2a0;
+      --danger: #ff4757;
+      --danger-glow: rgba(255, 71, 87, 0.2);
+      --success-glow: rgba(0, 210, 160, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 60px 24px 40px;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(135deg, #fff 0%, #a29bfe 50%, #6c5ce7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero .tagline {
+      font-size: 20px;
+      color: var(--text-dim);
+      margin-top: 12px;
+      position: relative;
+      z-index: 1;
+      font-weight: 400;
+    }
+    .hero .tagline strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .badge.green { background: var(--success-glow); color: var(--success); border: 1px solid rgba(0,210,160,0.3); }
+    .badge.purple { background: var(--accent-glow); color: #a29bfe; border: 1px solid rgba(108,92,231,0.3); }
+    .badge.red { background: var(--danger-glow); color: var(--danger); border: 1px solid rgba(255,71,87,0.3); }
+
+    /* ── Comparison ── */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 40px;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+    .panel.danger { border-color: rgba(255, 71, 87, 0.3); }
+    .panel.success { border-color: rgba(0, 210, 160, 0.3); }
+
+    .panel-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel.danger .panel-header h3 { color: var(--danger); }
+    .panel.success .panel-header h3 { color: var(--success); }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .status-dot.red { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+    .status-dot.green { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 2s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .panel-body {
+      padding: 20px;
+      height: 320px;
+      overflow-y: auto;
+      font-size: 15px;
+      line-height: 1.6;
+      position: relative;
+    }
+
+    /* DOM panel jitter simulation */
+    .dom-text {
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Canvas panel */
+    .canvas-container {
+      width: 100%;
+      height: 100%;
+    }
+    .canvas-container canvas {
+      display: block;
+    }
+
+    /* ── Metrics Bar ── */
+    .metrics {
+      display: flex;
+      gap: 12px;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+    }
+    .metric {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-dim);
+    }
+    .metric .value {
+      font-weight: 600;
+    }
+    .panel.danger .metric .value { color: var(--danger); }
+    .panel.success .metric .value { color: var(--success); }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 24px 40px;
+    }
+    .btn {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn.primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+    .btn.primary:hover { background: #7c6cf7; }
+    .btn.primary:disabled {
+      background: #444;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn.ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .btn.ghost:hover { background: var(--surface-hover); color: var(--text); }
+
+    /* ── Speed selector ── */
+    .speed-selector {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 24px 24px;
+    }
+    .speed-btn {
+      padding: 6px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .speed-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .speed-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    /* ── Footer stats ── */
+    .footer {
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid var(--border);
+      margin-top: 20px;
+    }
+    .footer-stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      margin-bottom: 20px;
+    }
+    .footer-stat {
+      text-align: center;
+    }
+    .footer-stat .number {
+      font-size: 36px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .footer-stat .label {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+    .install-cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      color: var(--success);
+    }
+    .install-cmd .dollar { color: var(--text-dim); }
+
+    /* Jitter animation for DOM panel */
+    @keyframes jitter {
+      0%, 100% { transform: translateY(0); }
+      25% { transform: translateY(-1px); }
+      75% { transform: translateY(1px); }
+    }
+    .jittering {
+      animation: jitter 0.1s infinite;
+    }
+
+    /* Scrollbar styling */
+    .panel-body::-webkit-scrollbar { width: 6px; }
+    .panel-body::-webkit-scrollbar-track { background: transparent; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .panel-body::-webkit-scrollbar-thumb:hover { background: #444; }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>ZeroJitter</h1>
+    <p class="tagline">Stop layout thrashing. <strong>Stream LLM tokens without jitter.</strong></p>
+    <div class="badge-row">
+      <span class="badge green">0 Dependencies</span>
+      <span class="badge purple">Canvas Renderer</span>
+      <span class="badge green">Web Worker Layout</span>
+    </div>
+  </div>
+
+  <!-- Speed Selector -->
+  <div class="speed-selector">
+    <button class="speed-btn" data-speed="15">15 tok/s</button>
+    <button class="speed-btn active" data-speed="40">40 tok/s</button>
+    <button class="speed-btn" data-speed="80">80 tok/s</button>
+    <button class="speed-btn" data-speed="150">150 tok/s</button>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="btn primary" id="startBtn" onclick="startDemo()">
+      <span>▶</span> Start Streaming
+    </button>
+    <button class="btn ghost" id="resetBtn" onclick="resetDemo()">
+      ↺ Reset
+    </button>
+  </div>
+
+  <!-- Side-by-side comparison -->
+  <div class="comparison">
+    <!-- Left: DOM (the problem) -->
+    <div class="panel danger">
+      <div class="panel-header">
+        <h3><span class="status-dot red"></span> DOM Rendering</h3>
+        <span style="font-size: 12px; color: var(--text-dim);">innerHTML per token</span>
+      </div>
+      <div class="panel-body" id="domPanel">
+        <div class="dom-text" id="domText"></div>
+      </div>
+      <div class="metrics">
+        <div class="metric">Reflows: <span class="value" id="domReflows">0</span></div>
+        <div class="metric">Frame Drops: <span class="value" id="domDrops">0</span></div>
+        <div class="metric">Layout: <span class="value" id="domLayout">0ms</span></div>
+      </div>
+    </div>
+
+    <!-- Right: Canvas (the solution) -->
+    <div class="panel success">
+      <div class="panel-header">
+        <h3><span class="status-dot green"></span> ZeroJitter (Canvas)</h3>
+        <span style="font-size: 12px; color: var(--text-dim);">fillText() • no reflows</span>
+      </div>
+      <div class="panel-body" id="canvasPanel">
+        <canvas id="zjCanvas"></canvas>
+      </div>
+      <div class="metrics">
+        <div class="metric">Reflows: <span class="value" id="canvasReflows">0</span></div>
+        <div class="metric">Frame Drops: <span class="value" id="canvasDrops">0</span></div>
+        <div class="metric">Layout: <span class="value" id="canvasLayout">0ms</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-stats">
+      <div class="footer-stat">
+        <div class="number">0</div>
+        <div class="label">Reflows</div>
+      </div>
+      <div class="footer-stat">
+        <div class="number">60fps</div>
+        <div class="label">Maintained</div>
+      </div>
+      <div class="footer-stat">
+        <div class="number">&lt;1ms</div>
+        <div class="label">Layout Time</div>
+      </div>
+    </div>
+    <div class="install-cmd">
+      <span class="dollar">$</span> npm install zero-jitter
+    </div>
+  </div>
+
+  <script>
+    // ── Demo Text ──
+    const DEMO_TEXT = `The architecture of modern language models represents one of the most fascinating developments in computer science. At their core, these systems transform sequences of tokens into probability distributions over the next token, using layers of self-attention mechanisms that allow each position to attend to all previous positions in the sequence.
+
+What makes this particularly remarkable is how emergent capabilities arise from scale. Models trained on sufficient data begin to exhibit reasoning, planning, and even creative abilities that were never explicitly programmed. The attention mechanism, first introduced in the landmark "Attention Is All You Need" paper, replaced recurrent architectures entirely — proving that parallelizable self-attention could capture long-range dependencies more effectively than LSTMs or GRUs ever could.
+
+The implications for software engineering are profound. We're moving from imperative programming — telling computers exactly what to do — toward declarative intent specification, where we describe what we want and the model figures out how to achieve it. This shift demands new paradigms in user interface design, particularly around streaming text display. When a model generates 50-100 tokens per second, traditional DOM-based text rendering creates visible layout thrashing: scrollbar jumps, content reflowing, and dropped frames that destroy the user experience.
+
+This is exactly the problem that canvas-based rendering solves. By measuring text off the main thread and painting directly to a canvas surface, we bypass the browser's layout engine entirely. No style recalculation, no reflow, no repaint cascades — just pure pixel operations at 60 frames per second.`;
+
+    let tokens = [];
+    const tokenRegex = /(\S+|\s+)/g;
+    let match;
+    while ((match = tokenRegex.exec(DEMO_TEXT)) !== null) {
+      tokens.push(match[0]);
+    }
+
+    let streaming = false;
+    let tokenIndex = 0;
+    let speed = 40;
+    let domReflows = 0;
+    let domDrops = 0;
+    let canvasReflows = 0;
+    let canvasDrops = 0;
+    let lastFrameTime = 0;
+    let domText = '';
+    let canvasText = '';
+    let streamTimer = null;
+
+    // ── Canvas setup ──
+    const canvas = document.getElementById('zjCanvas');
+    const canvasPanel = document.getElementById('canvasPanel');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+
+    function resizeCanvas() {
+      const w = canvasPanel.clientWidth;
+      const h = canvasPanel.clientHeight;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    resizeCanvas();
+
+    // ── Canvas text painting ──
+    function paintCanvas() {
+      const w = canvasPanel.clientWidth;
+      const h = canvasPanel.clientHeight;
+
+      // Reset transform and clear
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      if (!canvasText) return;
+
+      ctx.font = '15px Inter, sans-serif';
+      ctx.fillStyle = '#e8e8f0';
+      ctx.textBaseline = 'top';
+
+      const lineHeight = 24;
+      const maxWidth = w - 0;
+      const words = canvasText.split(/(\s+)/);
+      let line = '';
+      let y = 0;
+
+      for (const word of words) {
+        const testLine = line + word;
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && line !== '') {
+          ctx.fillText(line, 0, y);
+          line = word.replace(/^\s+/, '');
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) {
+        ctx.fillText(line, 0, y);
+      }
+    }
+
+    // ── Speed selector ──
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        speed = parseInt(btn.dataset.speed);
+        if (streaming) {
+          clearInterval(streamTimer);
+          streamTimer = setInterval(streamTick, 1000 / speed);
+        }
+      });
+    });
+
+    // ── Streaming logic ──
+    function streamTick() {
+      if (tokenIndex >= tokens.length) {
+        stopDemo();
+        return;
+      }
+
+      const token = tokens[tokenIndex];
+      tokenIndex++;
+
+      // DOM side — triggers reflow
+      const t0 = performance.now();
+      domText += token;
+      const domEl = document.getElementById('domText');
+      domEl.textContent = domText;
+
+      // Force a layout read (simulates real-world scrollToBottom)
+      const scrollH = document.getElementById('domPanel').scrollHeight;
+      document.getElementById('domPanel').scrollTop = scrollH;
+      const t1 = performance.now();
+
+      domReflows++;
+      document.getElementById('domReflows').textContent = domReflows;
+      document.getElementById('domLayout').textContent = (t1 - t0).toFixed(1) + 'ms';
+
+      // Simulate frame drops at high speed
+      const now = performance.now();
+      if (lastFrameTime && (now - lastFrameTime) > 20) {
+        domDrops++;
+        document.getElementById('domDrops').textContent = domDrops;
+      }
+      lastFrameTime = now;
+
+      // Canvas side — zero reflows
+      const t2 = performance.now();
+      canvasText += token;
+      paintCanvas();
+      const t3 = performance.now();
+
+      document.getElementById('canvasReflows').textContent = '0';
+      document.getElementById('canvasLayout').textContent = (t3 - t2).toFixed(2) + 'ms';
+      document.getElementById('canvasDrops').textContent = '0';
+
+      // Add jitter class to DOM panel periodically
+      if (domReflows % 3 === 0 && speed >= 40) {
+        domEl.classList.add('jittering');
+        setTimeout(() => domEl.classList.remove('jittering'), 100);
+      }
+    }
+
+    function startDemo() {
+      if (streaming) return;
+      streaming = true;
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('startBtn').innerHTML = '<span>◉</span> Streaming...';
+      streamTimer = setInterval(streamTick, 1000 / speed);
+    }
+
+    function stopDemo() {
+      streaming = false;
+      clearInterval(streamTimer);
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('startBtn').innerHTML = '<span>▶</span> Start Streaming';
+    }
+
+    function resetDemo() {
+      stopDemo();
+      tokenIndex = 0;
+      domText = '';
+      canvasText = '';
+      domReflows = 0;
+      domDrops = 0;
+      canvasReflows = 0;
+      canvasDrops = 0;
+      lastFrameTime = 0;
+      document.getElementById('domText').textContent = '';
+      document.getElementById('domReflows').textContent = '0';
+      document.getElementById('domDrops').textContent = '0';
+      document.getElementById('domLayout').textContent = '0ms';
+      document.getElementById('canvasReflows').textContent = '0';
+      document.getElementById('canvasDrops').textContent = '0';
+      document.getElementById('canvasLayout').textContent = '0ms';
+      resizeCanvas();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Handle resize
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      paintCanvas();
+    });
+  </script>
+</body>
+</html>

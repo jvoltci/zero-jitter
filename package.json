@@ -1,0 +1,82 @@
+{
+  "name": "zero-jitter",
+  "version": "0.1.0",
+  "description": "Zero-layout-jitter streaming text renderer for LLM tokens. Canvas + Web Worker architecture eliminates DOM reflows.",
+  "keywords": [
+    "react",
+    "llm",
+    "streaming",
+    "canvas",
+    "text-rendering",
+    "web-worker",
+    "jitter",
+    "layout-thrashing",
+    "chatgpt",
+    "ai",
+    "sse",
+    "server-sent-events",
+    "token-streaming",
+    "performance",
+    "virtualized-text"
+  ],
+  "author": "Jai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jvoltci/zero-jitter"
+  },
+  "homepage": "https://altrusian.com/zero-jitter",
+  "bugs": {
+    "url": "https://github.com/jvoltci/zero-jitter/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./worker": {
+      "import": "./dist/worker/layout.worker.js"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/ --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@storybook/addon-essentials": "^8.6.14",
+    "@storybook/react": "^8.6.18",
+    "@storybook/react-vite": "^8.6.18",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.57.2",
+    "@typescript-eslint/parser": "^8.57.2",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "prettier": "^3.8.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "storybook": "^8.6.18",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.1"
+  }
+}
