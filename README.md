@@ -161,16 +161,26 @@ DOM text rendering triggers layout recalculation on every token append. In a str
 
 Canvas `fillText()` bypasses the entire DOM layout pipeline. Combined with off-thread measurement, the main thread stays free for user interaction.
 
-## 🔗 Companion: StreamMD
+## 🔗 Companion: StreamMD (Cross-Reference)
 
-For **streaming markdown** that incrementally parses and renders only the active block, check out [StreamMD](https://www.npmjs.com/package/stream-md) — block-level memoization with built-in syntax highlighting.
+For **streaming markdown** (headings, code blocks, tables, lists) with incremental parsing, use [StreamMD](https://www.npmjs.com/package/stream-md).
+
+- npm: [stream-md](https://www.npmjs.com/package/stream-md)
+- GitHub: [jvoltci/stream-md](https://github.com/jvoltci/stream-md)
+
+### Which package should I use?
+
+| Use case | Package |
+|---|---|
+| Plain text token stream with max throughput and zero DOM reflow | `zero-jitter` |
+| Markdown token stream with incremental block rendering | `stream-md` |
 
 ```
 zero-jitter   → streaming plain text (canvas, zero reflows)
 stream-md     → streaming markdown (smart DOM, incremental parsing)
 ```
 
-Together, they own the "streaming LLM display" category.
+Together, they form a complete streaming LLM UI stack.
 
 ## 📄 License
 
