@@ -4,3 +4,12 @@ dist/
 .storybook-out/
 storybook-static/
 .DS_Store
+coverage/
+.vitest-cache/
+
+# Auto-generated worker source — produced by `npm run build`.
+src/.generated/
+
+# Local env files.
+.env
+.env.local

@@ -1,0 +1,25 @@
+[
+  {
+    "name": "core (ESM)",
+    "path": "dist/index.js",
+    "limit": "50 KB",
+    "ignore": ["react", "react-dom"]
+  },
+  {
+    "name": "core (CJS)",
+    "path": "dist/index.cjs",
+    "limit": "55 KB",
+    "ignore": ["react", "react-dom"]
+  },
+  {
+    "name": "worker",
+    "path": "dist/worker/layout.worker.js",
+    "limit": "40 KB"
+  },
+  {
+    "name": "internals (ESM)",
+    "path": "dist/internals.js",
+    "limit": "8 KB",
+    "ignore": ["react", "react-dom"]
+  }
+]

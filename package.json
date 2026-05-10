@@ -1,9 +1,13 @@
 {
   "name": "zero-jitter",
-  "version": "0.1.0",
-  "description": "Zero-layout-jitter streaming text renderer for LLM tokens. Canvas + Web Worker architecture eliminates DOM reflows.",
+  "version": "0.2.0",
+  "description": "Zero-layout-jitter streaming text renderer for LLM tokens. Off-thread measurement (Web Worker + pretext) + canvas paint. Works in React, Next.js, Vite, Remix.",
   "keywords": [
     "react",
+    "nextjs",
+    "next-js",
+    "vite",
+    "remix",
     "llm",
     "streaming",
     "canvas",
@@ -12,12 +16,16 @@
     "jitter",
     "layout-thrashing",
     "chatgpt",
+    "claude",
     "ai",
     "sse",
     "server-sent-events",
     "token-streaming",
     "performance",
-    "virtualized-text"
+    "virtualized-text",
+    "i18n",
+    "cjk",
+    "rtl"
   ],
   "author": "Jai",
   "repository": {
@@ -38,22 +46,41 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./internals": {
+      "types": "./dist/internals.d.ts",
+      "import": "./dist/internals.js",
+      "require": "./dist/internals.cjs"
+    },
     "./worker": {
       "import": "./dist/worker/layout.worker.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "npm run build:worker && npm run build:inline && npm run build:main && npm run build:finalize",
+    "build:worker": "tsup --config tsup.worker.config.ts",
+    "build:inline": "node scripts/inline-worker.mjs",
+    "build:main": "tsup",
+    "build:finalize": "node scripts/finalize-build.mjs",
     "dev": "tsup --watch",
     "lint": "eslint src/ --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run typecheck && npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "size": "size-limit",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm run test && npm run build && npm run size",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "changeset": "changeset",
+    "release": "changeset publish"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -61,22 +88,32 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@changesets/cli": "^2.27.10",
+    "@eslint/js": "^9.39.4",
+    "@size-limit/preset-small-lib": "^11.1.6",
     "@storybook/addon-essentials": "^8.6.14",
     "@storybook/react": "^8.6.18",
     "@storybook/react-vite": "^8.6.18",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.57.2",
     "@typescript-eslint/parser": "^8.57.2",
+    "@vitest/coverage-v8": "^2.1.8",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "happy-dom": "^15.11.7",
     "prettier": "^3.8.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "size-limit": "^11.1.6",
     "storybook": "^8.6.18",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "vite": "^6.4.1"
+    "typescript-eslint": "^8.59.2",
+    "vite": "^6.4.1",
+    "vitest": "^2.1.8"
   }
 }

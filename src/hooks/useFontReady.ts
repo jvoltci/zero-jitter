@@ -16,27 +16,35 @@ import { useEffect, useState } from 'react';
  */
 export function useFontReady(font: string): boolean {
   const [ready, setReady] = useState(() =>
-    typeof document !== 'undefined' && document.fonts.check(font),
+    typeof document !== 'undefined' && typeof document.fonts !== 'undefined'
+      ? document.fonts.check(font)
+      : false,
   );
 
   useEffect(() => {
-    if (ready) return;
+    if (typeof document === 'undefined' || typeof document.fonts === 'undefined') {
+      // Fonts API unavailable — assume ready so layout doesn't stall.
+      setReady(true);
+      return;
+    }
+
+    if (document.fonts.check(font)) {
+      setReady(true);
+      return;
+    }
 
     let cancelled = false;
 
-    // Phase 1: Wait for all currently-loading fonts to finish
     document.fonts.ready
       .then(() => {
-        // Phase 2: Double-check our specific font is available
         if (!cancelled && document.fonts.check(font)) {
           setReady(true);
         }
       })
       .catch(() => {
-        // If fonts.ready rejects (rare), fall through to loadingdone listener
+        // If fonts.ready rejects (rare), the loadingdone listener still has us covered.
       });
 
-    // Also listen for the specific font load event (covers lazy-loaded fonts)
     const onLoadingDone = () => {
       if (!cancelled && document.fonts.check(font)) {
         setReady(true);
@@ -48,7 +56,7 @@ export function useFontReady(font: string): boolean {
       cancelled = true;
       document.fonts.removeEventListener('loadingdone', onLoadingDone);
     };
-  }, [font, ready]);
+  }, [font]);
 
   return ready;
 }

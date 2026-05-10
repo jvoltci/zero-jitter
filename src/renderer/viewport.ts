@@ -27,8 +27,10 @@ export function getVisibleLineRange(
 
   const viewportBottom = scrollTop + viewportHeight;
 
-  // Binary search for the first line whose bottom edge is >= scrollTop
-  let start = 0;
+  // Binary search for the first line whose bottom edge is >= scrollTop.
+  // Default `start` to `lines.length` so that "scrolled past all content"
+  // produces an empty range (start === end) rather than re-painting from 0.
+  let start = lines.length;
   let lo = 0;
   let hi = lines.length - 1;
 

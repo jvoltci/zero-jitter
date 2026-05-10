@@ -1,0 +1,32 @@
+# `package.json` `files` already locks the published payload to
+# `dist/`, `README.md`, `CHANGELOG.md`, `LICENSE`. This file is a
+# defense-in-depth list — anything matched here is excluded even if
+# the `files` allowlist is loosened in the future.
+
+CLAUDE.md
+.claude/
+src/
+stories/
+.storybook/
+demo/
+scripts/
+examples/
+coverage/
+.vitest-cache/
+.changeset/
+.github/
+.size-limit.json
+.eslintrc.cjs
+.prettierrc
+.gitignore
+.npmignore
+vitest.config.ts
+vitest.setup.ts
+tsup.config.ts
+tsconfig.json
+storybook-static/
+*.tsbuildinfo
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx

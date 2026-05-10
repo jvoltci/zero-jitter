@@ -1,6 +1,14 @@
 // ─────────────────────────────────────────────────────────────
 // AccessibilityMirror — Visually hidden aria-live DOM mirror
 // ─────────────────────────────────────────────────────────────
+//
+// Strategy: we maintain a hidden, persistent text node and only
+// announce the *delta* since the last update. This avoids screen
+// readers re-reading the entire response on every debounce tick
+// (a real problem for long streamed answers).
+//
+// Empty text (after clear()) flushes immediately so the live region
+// transitions to "" promptly.
 
 import React, { useEffect, useRef, useState } from 'react';
 import { A11Y_DEBOUNCE_MS } from '../utils/constants';
@@ -14,11 +22,6 @@ interface AccessibilityMirrorProps {
   id: string;
 }
 
-/**
- * Screen-reader-only styles. Uses the "sr-only" pattern which is
- * preferable to `display: none` or `visibility: hidden` — those
- * hide content from screen readers entirely.
- */
 const srOnlyStyle: React.CSSProperties = {
   position: 'absolute',
   width: '1px',
@@ -32,44 +35,41 @@ const srOnlyStyle: React.CSSProperties = {
   pointerEvents: 'none',
 };
 
-/**
- * Renders a visually hidden container that mirrors the canvas text content.
- *
- * - Uses `aria-live="polite"` so screen readers announce new content
- *   without interrupting the current reading flow.
- * - Updates are DEBOUNCED (300ms) to avoid overwhelming screen readers
- *   with rapid token-by-token announcements.
- * - pointer-events: none prevents accidental interaction.
- */
 export const AccessibilityMirror: React.FC<AccessibilityMirrorProps> = ({
   text,
   liveRegion,
   id,
 }) => {
-  const [debouncedText, setDebouncedText] = useState(text);
+  const [announced, setAnnounced] = useState('');
+  const prevTextRef = useRef('');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // If text is empty (clear()), update immediately
+    // Flush immediately on clear / reset.
     if (text === '') {
-      setDebouncedText('');
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      prevTextRef.current = '';
+      setAnnounced('');
       return;
     }
 
-    // Debounce updates during streaming
-    if (timerRef.current !== null) {
-      clearTimeout(timerRef.current);
-    }
+    if (timerRef.current !== null) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
-      setDebouncedText(text);
+      const prev = prevTextRef.current;
+      // If the new text contains the previous as a prefix (the streaming case)
+      // we announce only the delta. Otherwise (replacement) we announce all.
+      const delta = text.startsWith(prev) ? text.slice(prev.length) : text;
+      prevTextRef.current = text;
+      setAnnounced(delta);
       timerRef.current = null;
     }, A11Y_DEBOUNCE_MS);
 
     return () => {
-      if (timerRef.current !== null) {
-        clearTimeout(timerRef.current);
-      }
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
     };
   }, [text]);
 
@@ -79,12 +79,11 @@ export const AccessibilityMirror: React.FC<AccessibilityMirrorProps> = ({
       role="log"
       aria-live={liveRegion}
       aria-atomic="false"
-      aria-relevant="additions text"
       style={srOnlyStyle}
     >
-      {debouncedText}
+      {announced}
     </div>
   );
 };
 
-AccessibilityMirror.displayName = 'AccessibilityMirror';
+AccessibilityMirror.displayName = 'ZeroJitter.AccessibilityMirror';

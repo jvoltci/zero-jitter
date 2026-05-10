@@ -1,22 +1,22 @@
 import { defineConfig } from 'tsup';
 
-export default defineConfig([
-  // Main library bundle
-  {
-    entry: ['src/index.ts'],
-    format: ['esm', 'cjs'],
-    dts: true,
-    sourcemap: true,
-    clean: true,
-    external: ['react', 'react-dom'],
-    treeshake: true,
+// Main + internals bundle. Run AFTER `tsup -c tsup.worker.config.ts`
+// and AFTER `scripts/inline-worker.mjs` — the main bundle imports the
+// generated `WORKER_SOURCE` string. After this build, run
+// `scripts/finalize-build.mjs` to prepend `"use client";` so Next.js
+// App Router treats the published bundle as a Client Component.
+
+export default defineConfig({
+  entry: {
+    index: 'src/index.ts',
+    internals: 'src/internals.ts',
   },
-  // Worker bundle (separate entry, no React externals)
-  {
-    entry: ['src/worker/layout.worker.ts'],
-    format: ['esm'],
-    outDir: 'dist/worker',
-    sourcemap: true,
-    // No noExternal needed — pretext is vendored in src/vendor/pretext/
-  },
-]);
+  format: ['esm', 'cjs'],
+  outDir: 'dist',
+  dts: true,
+  sourcemap: true,
+  target: 'es2020',
+  clean: false,
+  external: ['react', 'react-dom'],
+  treeshake: true,
+});
